@@ -1,38 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AMARONICS Live Dashboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMARONICS Minimal Dashboard</title>
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <style>
-  body{font-family:sans-serif;background:#071025;color:#dbeef6;padding:20px;}
-  h1{color:#00e0ff;}
-  .card{background:#0b1726;padding:15px;margin:10px 0;border-radius:10px;}
-  .status-on{color:#3bd671;} .status-off{color:#ff5c5c;}
+  body { font-family:sans-serif; background:#071025; color:#dbeef6; padding:20px; }
+  .card { background:#0b1726; padding:15px; border-radius:10px; margin-bottom:12px; }
+  .label { color:#9fb3c8; font-size:13px; }
+  .value { font-weight:700; font-size:18px; }
+  .status-on { color:#3bd671; }
+  .status-off { color:#ff5c5c; }
 </style>
 </head>
 <body>
-<h1>AMARONICS Generator Dashboard</h1>
+
+<h2>AMARONICS Minimal Dashboard</h2>
 
 <div class="card">
-  <strong>Connection:</strong> <span id="conn">Disconnected</span><br>
-  <strong>Broker:</strong> <span id="broker"></span>
+  <div class="label">Connection Status:</div>
+  <div class="value" id="conn">Disconnected</div>
 </div>
 
 <div class="card">
-  <strong>Generator:</strong> <span id="gen">--</span><br>
-  <strong>Lowest Voltage:</strong> <span id="lowest">--.- V</span>
+  <div class="label">Generator State:</div>
+  <div class="value" id="gen">--</div>
 </div>
 
 <div class="card">
-  <strong>Voltages:</strong>
-  <ul>
-    <li>V1: <span id="v1">--.-</span> V</li>
-    <li>V2: <span id="v2">--.-</span> V</li>
-    <li>V3: <span id="v3">--.-</span> V</li>
-    <li>V4: <span id="v4">--.-</span> V</li>
-  </ul>
+  <div class="label">Lowest Voltage:</div>
+  <div class="value" id="lowest">--.- V</div>
+</div>
+
+<div class="card">
+  <div class="label">Voltages:</div>
+  <div class="value" id="v1">V1: --.- V</div>
+  <div class="value" id="v2">V2: --.- V</div>
+  <div class="value" id="v3">V3: --.- V</div>
+  <div class="value" id="v4">V4: --.- V</div>
 </div>
 
 <script>
@@ -41,52 +47,62 @@ const MQTT_USER = "ZYESP32.1";
 const MQTT_PASS = "Bmxijosh.1";
 const TELEMETRY_TOPIC = "devices/GEN-01/telemetry";
 
-document.getElementById('broker').textContent = BROKER;
+const connEl = document.getElementById('conn');
+const genEl = document.getElementById('gen');
+const lowestEl = document.getElementById('lowest');
+const vEls = [document.getElementById('v1'), document.getElementById('v2'), document.getElementById('v3'), document.getElementById('v4')];
+
+let lastVoltages = [null,null,null,null];
+let genOn = false;
 
 const client = mqtt.connect(BROKER, {
   username: MQTT_USER,
   password: MQTT_PASS,
-  clientId: 'web-gen-' + Math.random().toString(16).slice(2, 8),
-  protocol: 'wss',
-  clean: true,
-  reconnectPeriod: 3000
+  clientId: 'web-gen-' + Math.random().toString(16).slice(2,9),
+  protocol: 'wss'
 });
 
 client.on('connect', () => {
-  document.getElementById('conn').textContent = 'Connected ✅';
-  console.log('MQTT connected');
-  client.subscribe(TELEMETRY_TOPIC, {qos:0}, (err)=>{
-    if(err) console.error('Subscribe error', err);
-    else console.log('Subscribed to telemetry');
+  connEl.textContent = "Connected ✅";
+  client.subscribe(TELEMETRY_TOPIC, (err) => {
+    if(err) console.error(err);
+    else console.log("Subscribed to telemetry");
   });
 });
 
-client.on('error', (err)=>{
-  console.error('MQTT Error:', err.message);
-  document.getElementById('conn').textContent = 'Error ❌';
-});
+client.on('reconnect', ()=>{ connEl.textContent = "Reconnecting..."; });
+client.on('error', (err)=>{ connEl.textContent = "Error"; console.error(err); });
+client.on('close', ()=>{ connEl.textContent = "Disconnected"; });
 
-client.on('message', (topic, message)=>{
+client.on('message', (topic, payload) => {
   try {
-    const data = JSON.parse(message.toString());
-    ['V1','V2','V3','V4'].forEach((k,i)=>{
-      const val = data[k] ?? data[k.toLowerCase()];
-      document.getElementById('v'+(i+1)).textContent = val != null ? val.toFixed(2) : '--.-';
-    });
-    // lowest voltage
-    const voltages = ['V1','V2','V3','V4'].map(k=>data[k] ?? data[k.toLowerCase()]).filter(v=>v!=null);
-    const lowest = voltages.length ? Math.min(...voltages) : null;
-    document.getElementById('lowest').textContent = lowest != null ? lowest.toFixed(2)+' V' : '--.- V';
+    const data = JSON.parse(payload.toString());
+    const keys = ['V1','V2','V3','V4'];
+    let lowest = Infinity;
+    for(let i=0;i<4;i++){
+      const k = keys[i];
+      let val = data[k] ?? data[k.toLowerCase()] ?? null;
+      val = val != null ? parseFloat(val) : null;
+      lastVoltages[i] = val;
+      if(val != null) lowest = Math.min(lowest, val);
+      vEls[i].textContent = `V${i+1}: ${val != null ? val.toFixed(2)+' V' : '--.- V'}`;
+    }
+    lowestEl.textContent = (lowest !== Infinity ? lowest.toFixed(2)+' V' : '--.- V');
 
-    // generator state
-    const gen = data.genState ?? data.gen ?? '--';
-    const el = document.getElementById('gen');
-    if(gen==='1' || gen?.toString().toUpperCase()==='ON'){ el.textContent='ON'; el.className='status-on'; }
-    else { el.textContent='OFF'; el.className='status-off'; }
+    // gen state
+    const g = data.genState ?? data.gen ?? null;
+    if(g != null){
+      genOn = (g.toString().toUpperCase() === 'ON' || g==='1');
+      genEl.textContent = genOn ? "ON ✅" : "OFF ❌";
+      genEl.className = genOn ? 'value status-on' : 'value status-off';
+    }
+
+    console.log("Telemetry:", data);
   } catch(e){
-    console.error('Telemetry parse error', e);
+    console.error("Invalid JSON:", payload.toString());
   }
 });
 </script>
+
 </body>
 </html>
