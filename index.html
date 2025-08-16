@@ -11,44 +11,44 @@
 
 <!-- Minimal styling (neon dark theme) -->
 <style>
-:root{
-  --bg:#071025; --card:#0b1726; --muted:#9fb3c8; --accent:#00e0ff; --danger:#ff5c5c; --ok:#3bd671;
-}
-*{box-sizing:border-box}
-body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;background:linear-gradient(180deg,var(--bg) 0%, #03111b 100%);color:#dbeef6}
-.wrap{max-width:1100px;margin:24px auto;padding:18px}
-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
-h1{margin:0;font-size:20px;letter-spacing:1px}
-.brand{display:flex;align-items:center;gap:12px}
-.logo{background:linear-gradient(90deg,var(--accent),#7cf3ff);width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#022; box-shadow:0 6px 28px rgba(0,224,255,0.09)}
-.hdr-sub{color:var(--muted);font-size:12px}
-.grid{display:grid;gap:12px;margin-top:18px}
-.cols-4{grid-template-columns:repeat(4,1fr)}
-.cols-3{grid-template-columns:2fr 1fr 1fr}
-.card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);padding:14px;border-radius:12px;box-shadow: 0 6px 24px rgba(0,0,0,0.5)}
-.label{font-size:12px;color:var(--muted);margin-bottom:6px}
-.value{font-size:18px;font-weight:700}
-.muted{color:var(--muted);font-size:13px}
-.controls{display:flex;gap:8px;flex-wrap:wrap}
-button{padding:10px 14px;border-radius:10px;border:none;font-weight:700;cursor:pointer}
-.btn-primary{background:linear-gradient(90deg,var(--accent),#60f0ff);color:#012;box-shadow:0 6px 20px rgba(0,224,255,0.08)}
-.btn-danger{background:var(--danger);color:#fff}
-.btn-neutral{background:#112533;color:var(--muted);border:1px solid rgba(255,255,255,0.03)}
-.small{padding:7px 10px;font-size:13px}
-.toggle{display:inline-flex;align-items:center;gap:8px}
-.switch{width:44px;height:24px;background:#072233;border-radius:999px;position:relative;padding:3px;cursor:pointer;border:1px solid rgba(255,255,255,0.03)}
-.knob{width:18px;height:18px;border-radius:50%;background:#d3f8ff;position:absolute;left:3px;top:50%;transform:translateY(-50%);transition:all .18s}
-.switch.on{background:linear-gradient(90deg,#0fb876,#26f69f)}
-.switch.on .knob{left:23px;background:#072022}
-.status-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}
-.status-on{background:var(--ok)} .status-off{background:var(--danger)}
-#log{height:160px;overflow:auto;padding:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));border-radius:8px;border:1px solid rgba(255,255,255,0.02);font-family:monospace;color:var(--muted);font-size:12px}
-.row{display:flex;gap:12px;align-items:center}
-.stretch{flex:1}
-input[type=number], input[type=text]{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;width:100%}
-.chart-wrap{height:220px}
-footer{margin-top:18px;color:var(--muted);font-size:12px;text-align:center}
-@media (max-width:900px){.cols-3{grid-template-columns:1fr} .cols-4{grid-template-columns:repeat(2,1fr)}}
+  :root{
+    --bg:#071025; --card:#0b1726; --muted:#9fb3c8; --accent:#00e0ff; --danger:#ff5c5c; --ok:#3bd671;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;background:linear-gradient(180deg,var(--bg) 0%, #03111b 100%);color:#dbeef6}
+  .wrap{max-width:1100px;margin:24px auto;padding:18px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  h1{margin:0;font-size:20px;letter-spacing:1px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{background:linear-gradient(90deg,var(--accent),#7cf3ff);width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#022; box-shadow:0 6px 28px rgba(0,224,255,0.09)}
+  .hdr-sub{color:var(--muted);font-size:12px}
+  .grid{display:grid;gap:12px;margin-top:18px}
+  .cols-4{grid-template-columns:repeat(4,1fr)}
+  .cols-3{grid-template-columns:2fr 1fr 1fr}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);padding:14px;border-radius:12px;box-shadow: 0 6px 24px rgba(0,0,0,0.5)}
+  .label{font-size:12px;color:var(--muted);margin-bottom:6px}
+  .value{font-size:18px;font-weight:700}
+  .muted{color:var(--muted);font-size:13px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap}
+  button{padding:10px 14px;border-radius:10px;border:none;font-weight:700;cursor:pointer}
+  .btn-primary{background:linear-gradient(90deg,var(--accent),#60f0ff);color:#012;box-shadow:0 6px 20px rgba(0,224,255,0.08)}
+  .btn-danger{background:var(--danger);color:#fff}
+  .btn-neutral{background:#112533;color:var(--muted);border:1px solid rgba(255,255,255,0.03)}
+  .small{padding:7px 10px;font-size:13px}
+  .toggle{display:inline-flex;align-items:center;gap:8px}
+  .switch{width:44px;height:24px;background:#072233;border-radius:999px;position:relative;padding:3px;cursor:pointer;border:1px solid rgba(255,255,255,0.03)}
+  .knob{width:18px;height:18px;border-radius:50%;background:#d3f8ff;position:absolute;left:3px;top:50%;transform:translateY(-50%);transition:all .18s}
+  .switch.on{background:linear-gradient(90deg,#0fb876,#26f69f)}
+  .switch.on .knob{left:23px;background:#072022}
+  .status-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}
+  .status-on{background:var(--ok)} .status-off{background:var(--danger)}
+  #log{height:160px;overflow:auto;padding:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));border-radius:8px;border:1px solid rgba(255,255,255,0.02);font-family:monospace;color:var(--muted);font-size:12px}
+  .row{display:flex;gap:12px;align-items:center}
+  .stretch{flex:1}
+  input[type=number], input[type=text]{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;width:100%}
+  .chart-wrap{height:220px}
+  footer{margin-top:18px;color:var(--muted);font-size:12px;text-align:center}
+  @media (max-width:900px){.cols-3{grid-template-columns:1fr} .cols-4{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -70,8 +70,8 @@ footer{margin-top:18px;color:var(--muted);font-size:12px;text-align:center}
     </div>
   </header>
 
-  <!-- connection & controls -->
   <div class="grid cols-3" style="margin-top:18px">
+    <!-- Connection & thresholds -->
     <div class="card">
       <div class="label">Connection</div>
       <div class="row" style="align-items:center">
@@ -101,7 +101,7 @@ footer{margin-top:18px;color:var(--muted);font-size:12px;text-align:center}
       </div>
     </div>
 
-    <!-- chart & lowest -->
+    <!-- Chart & lowest -->
     <div class="card">
       <div class="label">Lowest (enabled) Voltage</div>
       <div class="value" id="lowestVal">--.- V</div>
@@ -114,7 +114,7 @@ footer{margin-top:18px;color:var(--muted);font-size:12px;text-align:center}
       </div>
     </div>
 
-    <!-- controls -->
+    <!-- Generator controls -->
     <div class="card">
       <div class="label">Generator Controls</div>
       <div style="margin:8px 0" class="controls">
@@ -130,7 +130,7 @@ footer{margin-top:18px;color:var(--muted);font-size:12px;text-align:center}
     </div>
   </div>
 
-  <!-- log and config -->
+  <!-- Log & info -->
   <div class="grid cols-4" style="margin-top:12px">
     <div class="card">
       <div class="label">Event Log</div>
@@ -141,9 +141,6 @@ footer{margin-top:18px;color:var(--muted);font-size:12px;text-align:center}
       <div class="muted">Broker: <span id="brokerUrlDisplay"></span></div>
       <div class="muted" style="margin-top:8px">Telemetry topic: <strong>devices/GEN-01/telemetry</strong></div>
       <div class="muted">Command topic: <strong>devices/GEN-01/cmd</strong></div>
-      <div style="margin-top:12px">
-        <button id="btnExport" class="btn-neutral small">Export Config</button>
-      </div>
     </div>
     <div class="card">
       <div class="label">Quick actions</div>
@@ -154,7 +151,7 @@ footer{margin-top:18px;color:var(--muted);font-size:12px;text-align:center}
     </div>
     <div class="card">
       <div class="label">Notes</div>
-      <div class="muted">Dashboard auto-manages gen based on lowest enabled voltage and thresholds. Manual override is available.</div>
+      <div class="muted">Dashboard auto-manages gen based on lowest enabled voltage. Manual override available.</div>
     </div>
   </div>
 
@@ -162,34 +159,27 @@ footer{margin-top:18px;color:var(--muted);font-size:12px;text-align:center}
 </div>
 
 <script>
-/* ============================
+/* =============================
    CONFIG
-============================ */
+============================= */
 const BROKER = "wss://49aed91892f94fffb69fc1d2d686b60f.s1.eu.hivemq.cloud:8884/mqtt";
 const MQTT_USER = "ZYESP32.1";
 const MQTT_PASS = "Bmxijosh.1";
 const TELEMETRY_TOPIC = "devices/GEN-01/telemetry";
 const CMD_TOPIC = "devices/GEN-01/cmd";
 
-/* ============================
-   STATE
-============================ */
-let client = null, connected=false, autoControl=true, manualOverride=false;
-let inputsEnabled=[true,true,true,true], lastVoltages=[null,null,null,null];
-let genOn=false, genStartEpoch=null, MAX_RUN_MS=4*60*60*1000;
-
-/* ============================
-   UI References
-============================ */
+/* =============================
+   UI ELEMENTS
+============================= */
 const connStatusEl = document.getElementById('connStatus');
 const connTextEl = document.getElementById('connText');
-const brokerInfoEl = document.getElementById('brokerInfo');
 const brokerUrlDisplay = document.getElementById('brokerUrlDisplay');
 const logEl = document.getElementById('log');
 const lowestValEl = document.getElementById('lowestVal');
 const genIndicator = document.getElementById('genIndicator');
 const genText = document.getElementById('genText');
 const countdownEl = document.getElementById('countdown');
+
 const btnConnect = document.getElementById('btnConnect');
 const btnDisconnect = document.getElementById('btnDisconnect');
 const btnGenOn = document.getElementById('btnGenOn');
@@ -202,33 +192,64 @@ const btnAutoToggle = document.getElementById('btnAutoToggle');
 const btnClearLog = document.getElementById('btnClearLog');
 const btnResetTimer = document.getElementById('btnResetTimer');
 const inputCardsContainer = document.getElementById('inputCards');
+
+/* =============================
+   STATE
+============================= */
+let client = null;
+let connected = false;
+let autoControl = true;
+let manualOverride = false;
+let inputsEnabled = [true,true,true,true];
+let lastVoltages = [null,null,null,null];
+let genOn = false;
+let genStartEpoch = null;
+const MAX_RUN_MS = 4*60*60*1000;
+
 brokerUrlDisplay.textContent = BROKER;
 
-/* ============================
+/* =============================
    CHART
-============================ */
+============================= */
 const ctx = document.getElementById('voltChart').getContext('2d');
-window.voltChart = new Chart(ctx,{
+const chart = new Chart(ctx, {
   type:'line',
   data:{
     labels:[],
     datasets:[
-      {label:'V1', data:[], borderColor:'#60f0ff', tension:0.2, pointRadius:0},
-      {label:'V2', data:[], borderColor:'#7cf77f', tension:0.2, pointRadius:0},
-      {label:'V3', data:[], borderColor:'#ffd166', tension:0.2, pointRadius:0},
-      {label:'V4', data:[], borderColor:'#ff7b7b', tension:0.2, pointRadius:0}
+      { label:'V1', data:[], borderColor:'#60f0ff', tension:0.2, pointRadius:0 },
+      { label:'V2', data:[], borderColor:'#7cf77f', tension:0.2, pointRadius:0 },
+      { label:'V3', data:[], borderColor:'#ffd166', tension:0.2, pointRadius:0 },
+      { label:'V4', data:[], borderColor:'#ff7b7b', tension:0.2, pointRadius:0 }
     ]
   },
-  options:{animation:false, plugins:{legend:{labels:{color:'#cfeef8'}}}, scales:{x:{ticks:{color:'#9fb3c8'}},y:{ticks:{color:'#9fb3c8'}}}}
+  options:{ animation:false, plugins:{legend:{labels:{color:'#cfeef8'}}}, scales:{x:{ticks:{color:'#9fb3c8'}}, y:{ticks:{color:'#9fb3c8'}}} }
 });
 
-/* ============================
-   LOG & UI HELPERS
-============================ */
-function log(msg){ const t=new Date().toLocaleTimeString(); logEl.innerHTML=`[${t}] ${msg}<br>`+logEl.innerHTML; console.log(msg); }
+/* =============================
+   HELPERS
+============================= */
+function log(msg){ logEl.innerHTML=`[${new Date().toLocaleTimeString()}] ${msg}<br>`+logEl.innerHTML; }
 function setConn(s){ connected=s; connStatusEl.textContent=s?'Connected':'Disconnected'; connTextEl.textContent=s?'Connected to HiveMQ':'Disconnected'; btnConnect.disabled=s; btnDisconnect.disabled=!s; }
 function updateGenUI(){ genText.textContent=genOn?'GEN: ON':'GEN: OFF'; genIndicator.className='status-dot '+(genOn?'status-on':'status-off'); btnOverride.textContent=manualOverride?'Manual Override: ON':'Manual Override: OFF'; }
-function renderInputCards(){ inputCardsContainer.innerHTML=''; for(let i=0;i<4;i++){ const idx=i+1; const div=document.createElement('div'); div.style.padding='10px'; div.style.borderRadius='8px'; div.style.background='linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005))'; div.innerHTML=`<div style="font-size:13px;color:var(--muted)">Input V${idx}</div><div style="font-weight:700;font-size:16px;margin:6px 0" id="v${idx}">--.- V</div><div style="display:flex;justify-content:space-between;align-items:center"><div class="muted" style="font-size:12px">Enabled</div><div class="toggle"><div class="switch ${inputsEnabled[i]?'on':''}" data-index="${i}"><div class="knob"></div></div></div></div>`; inputCardsContainer.appendChild(div);} document.querySelectorAll('.switch').forEach(s=>{s.onclick=()=>{ const idx=Number(s.getAttribute('data-index')); inputsEnabled[idx]=!inputsEnabled[idx]; s.classList.toggle('on',inputsEnabled[idx]); publishInputsState(); computeAndAct(); renderInputValues(); }; }); }
-function renderInputValues(){ for(let i=0;i<4;i++){ const el=document.getElementById(`v${i+1}`); const val=lastVoltages[i]; el.textContent=(val!=null?val.toFixed(2)+' V':'--.- V'); el.style.color=inputsEnabled[i]?'#dbeef6':'#6b8796'; }
-}
-function updateChart(){ const now=new Date().toLocaleTimeString(); const chart=window.voltChart; chart.data.labels.push(now); if(chart.data.labels.length>60) chart.data.labels.shift(); lastVoltages.forEach((v,i)=>{ chart.data.datasets[i].data.push
+function renderInputCards(){ inputCardsContainer.innerHTML=''; for(let i=0;i<4;i++){ const div=document.createElement('div'); div.style.padding='10px'; div.style.borderRadius='8px'; div.style.background='linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005))'; div.innerHTML=`<div style="font-size:13px;color:var(--muted)">Input V${i+1}</div><div style="font-weight:700;font-size:16px;margin:6px 0" id="v${i+1}">--.- V</div><div style="display:flex;justify-content:space-between;align-items:center"><div class="muted" style="font-size:12px">Enabled</div><div class="toggle"><div class="switch ${inputsEnabled[i]?'on':''}" data-index="${i}"><div class="knob"></div></div></div></div>`; inputCardsContainer.appendChild(div); } document.querySelectorAll('.switch').forEach(s=>{ s.onclick=()=>{ const idx=Number(s.getAttribute('data-index')); inputsEnabled[idx]=!inputsEnabled[idx]; s.classList.toggle('on',inputsEnabled[idx]); publishInputsState(); computeAndAct(); renderInputValues(); }; }); }
+function renderInputValues(){ for(let i=0;i<4;i++){ const el=document.getElementById(`v${i+1}`); const val=lastVoltages[i]; el.textContent=(val==null)?'--.- V':val.toFixed(2)+' V'; el.style.color=inputsEnabled[i]?'#dbeef6':'#6b8796'; } }
+function updateChart(){ const now=new Date().toLocaleTimeString(); chart.data.labels.push(now); if(chart.data.labels.length>60) chart.data.labels.shift(); for(let i=0;i<4;i++){ const v=lastVoltages[i]; chart.data.datasets[i].data.push(isFinite(v)?v:null); if(chart.data.datasets[i].data.length>60) chart.data.datasets[i].data.shift(); } chart.update('none'); }
+
+/* =============================
+   MQTT CONNECT
+============================= */
+function connectMQTT(){
+  if(client && connected) return;
+  log('Connecting to broker...');
+  client = mqtt.connect(BROKER,{username:MQTT_USER,password:MQTT_PASS,protocol:'wss',keepalive:60});
+  client.on('connect',()=>{ setConn(true); log('MQTT connected'); client.subscribe(TELEMETRY_TOPIC,{qos:0},err=>{ if(!err) log('Subscribed to telemetry'); }); publishCmd({command:'STATUS_REQUEST'}); });
+  client.on('reconnect',()=>log('Reconnecting...'));
+  client.on('error',err=>{ log('MQTT error: '+err.message); setConn(false); });
+  client.on('close',()=>{ log('MQTT closed'); setConn(false); });
+  client.on('message',(topic,msg)=>{
+    if(topic===TELEMETRY_TOPIC){
+      try{
+        const data=JSON.parse(msg.toString());
+        for(let i=0;i<4;i++){ lastVoltages[i]=data['V'+(i+1)]??lastVoltages[i]; }
+        lowestValEl.textContent=data.lowestV?.toFixed(2
