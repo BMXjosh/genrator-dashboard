@@ -2,141 +2,122 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Generator Controller Dashboard</title>
+  <title>⚡ Generator Controller Dashboard ⚡</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #f1f5f9;
+      background: #0d1117;
+      color: #e6edf3;
       text-align: center;
-      margin: 0;
       padding: 20px;
     }
     h1 {
-      color: #38bdf8;
+      color: #58a6ff;
     }
-    #status {
-      font-weight: bold;
+    .status {
       margin: 10px 0;
+      font-size: 18px;
     }
-    .controls {
+    .voltage {
+      font-size: 24px;
       margin: 20px 0;
     }
     button {
-      background: #38bdf8;
+      padding: 12px 24px;
+      font-size: 18px;
       border: none;
-      color: #0f172a;
-      padding: 10px 20px;
-      margin: 5px;
       border-radius: 8px;
-      font-weight: bold;
+      margin: 10px;
       cursor: pointer;
+      background: #238636;
+      color: white;
+      transition: 0.2s;
+    }
+    button.off {
+      background: #da3633;
     }
     button:hover {
-      background: #0ea5e9;
+      opacity: 0.8;
     }
-    canvas {
-      background: #1e293b;
-      border-radius: 12px;
-      margin-top: 20px;
+    #log {
+      margin-top: 30px;
+      padding: 10px;
+      background: #161b22;
+      border-radius: 8px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+      font-size: 14px;
+      height: 200px;
+      overflow-y: auto;
     }
   </style>
 </head>
 <body>
   <h1>⚡ Generator Controller Dashboard ⚡</h1>
-  <div id="status">🔴 Disconnected</div>
+  <div class="status" id="status">🔴 Connecting...</div>
+  <div class="voltage" id="voltage">Voltage: --.- V</div>
+  
+  <button onclick="sendCommand('ON')">Turn Generator ON</button>
+  <button class="off" onclick="sendCommand('OFF')">Turn Generator OFF</button>
 
-  <div class="controls">
-    <button onclick="sendCommand('ON')">Turn Generator ON</button>
-    <button onclick="sendCommand('OFF')">Turn Generator OFF</button>
-  </div>
-
-  <canvas id="voltageChart" width="400" height="200"></canvas>
+  <div id="log"></div>
 
   <script>
-    // HiveMQ Cloud settings
+    // HiveMQ Cloud broker config
+    const brokerUrl = "wss://49aed91892f94fffb69fc1d2d686b60f.s1.eu.hivemq.cloud:8884/mqtt";
+
     const options = {
+      username: "ZYESP32.1",
+      password: "Bmxijosh.1",
+      protocol: "wss",
+      clientId: "web_" + Math.random().toString(16).substr(2, 8),
       clean: true,
-      connectTimeout: 4000,
-      clientId: "web-dashboard-" + Math.random().toString(16).substr(2, 8),
-      username: "genadmin",       // replace with your HiveMQ username
-      password: "StrongPass123!", // replace with your HiveMQ password
     };
 
-    // Connect to HiveMQ Cloud WebSocket
-    const client = mqtt.connect("wss://49aed91892f94fffb69fc1d2d686b60f.s1.eu.hivemq.cloud:8884/mqtt", options);
+    const client = mqtt.connect(brokerUrl, options);
 
-    const statusDiv = document.getElementById("status");
+    const statusEl = document.getElementById("status");
+    const voltageEl = document.getElementById("voltage");
+    const logEl = document.getElementById("log");
+
+    function log(msg) {
+      const time = new Date().toLocaleTimeString();
+      logEl.innerHTML = `[${time}] ${msg}<br>` + logEl.innerHTML;
+    }
 
     client.on("connect", () => {
-      statusDiv.innerHTML = "🟢 Connected to HiveMQ Cloud";
-      client.subscribe("devices/GEN-01/telemetry", (err) => {
-        if (!err) console.log("Subscribed to telemetry topic");
+      statusEl.textContent = "🟢 Connected to HiveMQ Cloud";
+      log("Connected ✅");
+
+      // Subscribe to voltage topic
+      client.subscribe("esp32/generator/voltage", (err) => {
+        if (!err) log("Subscribed to esp32/generator/voltage");
       });
     });
 
     client.on("error", (err) => {
-      statusDiv.innerHTML = "🔴 Connection Error: " + err;
-      console.error("Connection failed:", err);
+      statusEl.textContent = "🔴 Connection Error: " + err.message;
+      log("Error ❌ " + err.message);
     });
 
-    // Voltage chart setup
-    const ctx = document.getElementById("voltageChart").getContext("2d");
-    const voltageChart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: [],
-        datasets: [{
-          label: "Battery Voltage (V)",
-          borderColor: "#38bdf8",
-          data: [],
-          fill: false,
-          tension: 0.1
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            title: { display: true, text: "Time" },
-            ticks: { color: "#f1f5f9" }
-          },
-          y: {
-            title: { display: true, text: "Voltage (V)" },
-            ticks: { color: "#f1f5f9" }
-          }
-        },
-        plugins: {
-          legend: { labels: { color: "#f1f5f9" } }
-        }
-      }
-    });
-
-    // Handle incoming telemetry
     client.on("message", (topic, message) => {
-      if (topic === "devices/GEN-01/telemetry") {
-        const data = JSON.parse(message.toString());
-        console.log("Telemetry:", data);
-
-        const now = new Date().toLocaleTimeString();
-        voltageChart.data.labels.push(now);
-        voltageChart.data.datasets[0].data.push(data.voltage);
-
-        if (voltageChart.data.labels.length > 20) {
-          voltageChart.data.labels.shift();
-          voltageChart.data.datasets[0].data.shift();
+      if (topic === "esp32/generator/voltage") {
+        try {
+          const data = JSON.parse(message.toString());
+          voltageEl.textContent = `Voltage: ${data.voltage.toFixed(2)} V`;
+          log("Voltage update: " + data.voltage.toFixed(2) + " V");
+        } catch (e) {
+          log("Invalid message: " + message.toString());
         }
-
-        voltageChart.update();
       }
     });
 
-    // Send control commands
     function sendCommand(cmd) {
-      client.publish("devices/GEN-01/cmd", cmd);
-      console.log("Sent command:", cmd);
+      client.publish("esp32/generator/control", cmd);
+      log("Sent command: " + cmd);
     }
   </script>
 </body>
