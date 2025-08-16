@@ -1,124 +1,538 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>⚡ Generator Controller Dashboard ⚡</title>
-  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0d1117;
-      color: #e6edf3;
-      text-align: center;
-      padding: 20px;
-    }
-    h1 {
-      color: #58a6ff;
-    }
-    .status {
-      margin: 10px 0;
-      font-size: 18px;
-    }
-    .voltage {
-      font-size: 24px;
-      margin: 20px 0;
-    }
-    button {
-      padding: 12px 24px;
-      font-size: 18px;
-      border: none;
-      border-radius: 8px;
-      margin: 10px;
-      cursor: pointer;
-      background: #238636;
-      color: white;
-      transition: 0.2s;
-    }
-    button.off {
-      background: #da3633;
-    }
-    button:hover {
-      opacity: 0.8;
-    }
-    #log {
-      margin-top: 30px;
-      padding: 10px;
-      background: #161b22;
-      border-radius: 8px;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-      text-align: left;
-      font-size: 14px;
-      height: 200px;
-      overflow-y: auto;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AMARONICS SMART SYSTEMS — Generator Dashboard</title>
+
+<!-- Libraries -->
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Minimal styling (neon dark theme) -->
+<style>
+  :root{
+    --bg:#071025; --card:#0b1726; --muted:#9fb3c8; --accent:#00e0ff; --danger:#ff5c5c; --ok:#3bd671;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;background:linear-gradient(180deg,var(--bg) 0%, #03111b 100%);color:#dbeef6}
+  .wrap{max-width:1100px;margin:24px auto;padding:18px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  h1{margin:0;font-size:20px;letter-spacing:1px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{background:linear-gradient(90deg,var(--accent),#7cf3ff);width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#022; box-shadow:0 6px 28px rgba(0,224,255,0.09)}
+  .hdr-sub{color:var(--muted);font-size:12px}
+  .grid{display:grid;gap:12px;margin-top:18px}
+  .cols-4{grid-template-columns:repeat(4,1fr)}
+  .cols-3{grid-template-columns:2fr 1fr 1fr}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);padding:14px;border-radius:12px;box-shadow: 0 6px 24px rgba(0,0,0,0.5)}
+  .label{font-size:12px;color:var(--muted);margin-bottom:6px}
+  .value{font-size:18px;font-weight:700}
+  .muted{color:var(--muted);font-size:13px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap}
+  button{padding:10px 14px;border-radius:10px;border:none;font-weight:700;cursor:pointer}
+  .btn-primary{background:linear-gradient(90deg,var(--accent),#60f0ff);color:#012;box-shadow:0 6px 20px rgba(0,224,255,0.08)}
+  .btn-danger{background:var(--danger);color:#fff}
+  .btn-neutral{background:#112533;color:var(--muted);border:1px solid rgba(255,255,255,0.03)}
+  .small{padding:7px 10px;font-size:13px}
+  .toggle{display:inline-flex;align-items:center;gap:8px}
+  .switch{width:44px;height:24px;background:#072233;border-radius:999px;position:relative;padding:3px;cursor:pointer;border:1px solid rgba(255,255,255,0.03)}
+  .knob{width:18px;height:18px;border-radius:50%;background:#d3f8ff;position:absolute;left:3px;top:50%;transform:translateY(-50%);transition:all .18s}
+  .switch.on{background:linear-gradient(90deg,#0fb876,#26f69f)}
+  .switch.on .knob{left:23px;background:#072022}
+  .status-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}
+  .status-on{background:var(--ok)} .status-off{background:var(--danger)}
+  #log{height:160px;overflow:auto;padding:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));border-radius:8px;border:1px solid rgba(255,255,255,0.02);font-family:monospace;color:var(--muted);font-size:12px}
+  .row{display:flex;gap:12px;align-items:center}
+  .stretch{flex:1}
+  input[type=number], input[type=text]{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;width:100%}
+  .chart-wrap{height:220px}
+  footer{margin-top:18px;color:var(--muted);font-size:12px;text-align:center}
+  @media (max-width:900px){.cols-3{grid-template-columns:1fr} .cols-4{grid-template-columns:repeat(2,1fr)}}
+</style>
 </head>
 <body>
-  <h1>⚡ Generator Controller Dashboard ⚡</h1>
-  <div class="status" id="status">🔴 Connecting...</div>
-  <div class="voltage" id="voltage">Voltage: --.- V</div>
-  
-  <button onclick="sendCommand('ON')">Turn Generator ON</button>
-  <button class="off" onclick="sendCommand('OFF')">Turn Generator OFF</button>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">AMS</div>
+      <div>
+        <h1>⚡ AMARONICS SMART SYSTEMS</h1>
+        <div class="hdr-sub">Generator Cloud Control • Live MQTT (HiveMQ)</div>
+      </div>
+    </div>
 
-  <div id="log"></div>
+    <div style="text-align:right">
+      <div id="connText" class="muted">Connecting...</div>
+      <div style="margin-top:8px">
+        <span id="genIndicator" class="status-dot status-off"></span>
+        <span id="genText" class="muted">GEN: --</span>
+      </div>
+    </div>
+  </header>
 
-  <script>
-    // HiveMQ Cloud broker config
-    const brokerUrl = "wss://49aed91892f94fffb69fc1d2d686b60f.s1.eu.hivemq.cloud:8884/mqtt";
+  <!-- connection & controls -->
+  <div class="grid cols-3" style="margin-top:18px">
+    <div class="card">
+      <div class="label">Connection</div>
+      <div class="row" style="align-items:center">
+        <div class="muted stretch"><strong id="connStatus">Disconnected</strong><div class="muted" id="brokerInfo"></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button id="btnConnect" class="btn-primary small">Connect</button>
+          <button id="btnDisconnect" class="btn-neutral small">Disconnect</button>
+        </div>
+      </div>
 
-    const options = {
-      username: "ZYESP32.1",
-      password: "Bmxijosh.1",
-      protocol: "wss",
-      clientId: "web_" + Math.random().toString(16).substr(2, 8),
-      clean: true,
+      <hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,0.02)">
+
+      <div class="label">Auto control</div>
+      <div class="muted">Lowest enabled voltage will be used for decision making.</div>
+      <div style="margin-top:8px" class="row">
+        <div style="flex:1">
+          <div class="label">Start threshold (V)</div>
+          <input id="startThreshold" type="number" step="0.1" value="47.0">
+        </div>
+        <div style="width:12px"></div>
+        <div style="flex:1">
+          <div class="label">Stop threshold (V)</div>
+          <input id="stopThreshold" type="number" step="0.1" value="55.0">
+        </div>
+      </div>
+      <div style="margin-top:10px" class="row">
+        <button id="btnSendThresholds" class="btn-primary small">Send Thresholds</button>
+        <button id="btnAutoToggle" class="btn-neutral small">Auto: ON</button>
+      </div>
+    </div>
+
+    <!-- chart & lowest -->
+    <div class="card">
+      <div class="label">Lowest (enabled) Voltage</div>
+      <div class="value" id="lowestVal">--.- V</div>
+      <div style="margin-top:8px" class="chart-wrap">
+        <canvas id="voltChart"></canvas>
+      </div>
+      <div style="margin-top:10px" class="row">
+        <div class="muted">4-hour countdown:</div>
+        <div id="countdown" class="muted" style="font-weight:700">--:--:--</div>
+      </div>
+    </div>
+
+    <!-- controls -->
+    <div class="card">
+      <div class="label">Generator Controls</div>
+      <div style="margin:8px 0" class="controls">
+        <button id="btnGenOn" class="btn-primary">GEN ON</button>
+        <button id="btnGenOff" class="btn-danger">GEN OFF</button>
+        <button id="btnOverride" class="btn-neutral">Manual Override: OFF</button>
+      </div>
+
+      <hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,0.02)">
+
+      <div class="label">Inputs</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <!-- Input cards will be injected -->
+        <div id="inputCards"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- log and config -->
+  <div class="grid cols-4" style="margin-top:12px">
+    <div class="card">
+      <div class="label">Event Log</div>
+      <div id="log"></div>
+    </div>
+
+    <div class="card">
+      <div class="label">Broker & Topics</div>
+      <div class="muted">Broker: <span id="brokerUrlDisplay"></span></div>
+      <div class="muted" style="margin-top:8px">Telemetry topic: <strong>devices/GEN-01/telemetry</strong></div>
+      <div class="muted">Command topic: <strong>devices/GEN-01/cmd</strong></div>
+      <div style="margin-top:12px">
+        <button id="btnExport" class="btn-neutral small">Export Config</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">Quick actions</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button id="btnClearLog" class="btn-neutral small">Clear Log</button>
+        <button id="btnResetTimer" class="btn-neutral small">Reset 4-hour Timer</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">Notes</div>
+      <div class="muted">Dashboard will auto-MANAGE gen based on lowest enabled voltage and thresholds. You can override manually anytime.</div>
+    </div>
+  </div>
+
+  <footer>AMARONICS SMART SYSTEMS • Live control via HiveMQ Cloud</footer>
+</div>
+
+<script>
+/* ============================
+   Config (Broker & Credentials)
+   ============================ */
+const BROKER = "wss://49aed91892f94fffb69fc1d2d686b60f.s1.eu.hivemq.cloud:8884/mqtt";
+const MQTT_USER = "ZYESP32.1";
+const MQTT_PASS = "Bmxijosh.1";
+const TELEMETRY_TOPIC = "devices/GEN-01/telemetry";
+const CMD_TOPIC = "devices/GEN-01/cmd";
+
+/* ============================
+   UI references
+   ============================ */
+const connStatusEl = document.getElementById('connStatus');
+const connTextEl = document.getElementById('connText');
+const brokerInfoEl = document.getElementById('brokerInfo');
+const brokerUrlDisplay = document.getElementById('brokerUrlDisplay');
+const logEl = document.getElementById('log');
+const lowestValEl = document.getElementById('lowestVal');
+const genIndicator = document.getElementById('genIndicator');
+const genText = document.getElementById('genText');
+const countdownEl = document.getElementById('countdown');
+
+const btnConnect = document.getElementById('btnConnect');
+const btnDisconnect = document.getElementById('btnDisconnect');
+const btnGenOn = document.getElementById('btnGenOn');
+const btnGenOff = document.getElementById('btnGenOff');
+const btnOverride = document.getElementById('btnOverride');
+const btnSendThresholds = document.getElementById('btnSendThresholds');
+const startThresholdInput = document.getElementById('startThreshold');
+const stopThresholdInput = document.getElementById('stopThreshold');
+const btnAutoToggle = document.getElementById('btnAutoToggle');
+const btnClearLog = document.getElementById('btnClearLog');
+const btnResetTimer = document.getElementById('btnResetTimer');
+const inputCardsContainer = document.getElementById('inputCards');
+
+/* ============================
+   State
+   ============================ */
+let client = null;
+let connected = false;
+let autoControl = true;
+let manualOverride = false; // when true, manual override is active and auto won't toggle
+let inputsEnabled = [true, true, true, true];
+let lastVoltages = [null, null, null, null];
+let genOn = false;
+let genStartEpoch = null; // timestamp in ms when dashboard turned gen ON
+const MAX_RUN_MS = 4 * 60 * 60 * 1000; // 4 hours in ms
+
+brokerUrlDisplay.textContent = BROKER;
+
+/* ============================
+   Chart setup
+   ============================ */
+const ctx = document.getElementById('voltChart').getContext('2d');
+const chart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [
+      { label: 'V1', data: [], borderColor: '#60f0ff', tension:0.2, pointRadius:0 },
+      { label: 'V2', data: [], borderColor: '#7cf77f', tension:0.2, pointRadius:0 },
+      { label: 'V3', data: [], borderColor: '#ffd166', tension:0.2, pointRadius:0 },
+      { label: 'V4', data: [], borderColor: '#ff7b7b', tension:0.2, pointRadius:0 }
+    ]
+  },
+  options: { animation:false, plugins:{legend:{labels:{color:'#cfeef8'}}}, scales:{x:{ticks:{color:'#9fb3c8'}}, y:{ticks:{color:'#9fb3c8'}}}
+});
+
+/* ============================
+   Helpers
+   ============================ */
+function log(msg){
+  const t = new Date().toLocaleTimeString();
+  logEl.innerHTML = `[${t}] ${msg}<br>` + logEl.innerHTML;
+}
+function setConn(s){
+  connected = s;
+  connStatusEl.textContent = s ? 'Connected' : 'Disconnected';
+  connTextEl.textContent = s ? 'Connected to HiveMQ' : 'Disconnected';
+  btnConnect.disabled = s;
+  btnDisconnect.disabled = !s;
+}
+function updateGenUI(){
+  genText.textContent = genOn ? 'GEN: ON' : 'GEN: OFF';
+  genIndicator.className = 'status-dot ' + (genOn ? 'status-on' : 'status-off');
+  btnOverride.textContent = manualOverride ? 'Manual Override: ON' : 'Manual Override: OFF';
+}
+
+/* ============================
+   Input cards UI
+   ============================ */
+function renderInputCards(){
+  inputCardsContainer.innerHTML = '';
+  for(let i=0;i<4;i++){
+    const idx = i+1;
+    const div = document.createElement('div');
+    div.style.padding = '10px';
+    div.style.borderRadius = '8px';
+    div.style.background = 'linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005))';
+    div.innerHTML = `
+      <div style="font-size:13px;color:var(--muted)">Input V${idx}</div>
+      <div style="font-weight:700;font-size:16px;margin:6px 0" id="v${idx}">--.- V</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="muted" style="font-size:12px">Enabled</div>
+        <div class="toggle">
+          <div class="switch ${inputsEnabled[i] ? 'on':''}" data-index="${i}">
+            <div class="knob"></div>
+          </div>
+        </div>
+      </div>
+    `;
+    inputCardsContainer.appendChild(div);
+  }
+  // attach toggle listeners
+  document.querySelectorAll('.switch').forEach(s=>{
+    s.onclick = () => {
+      const idx = Number(s.getAttribute('data-index'));
+      inputsEnabled[idx] = !inputsEnabled[idx];
+      s.classList.toggle('on', inputsEnabled[idx]);
+      publishInputsState();
+      computeAndAct();
+      renderInputValues(); // update display if any
     };
+  });
+}
+function renderInputValues(){
+  for(let i=0;i<4;i++){
+    const el = document.getElementById(`v${i+1}`);
+    const val = lastVoltages[i];
+    el.textContent = (val==null) ? '--.- V' : `${val.toFixed(2)} V`;
+    el.style.color = inputsEnabled[i] ? '#dbeef6' : '#6b8796';
+  }
+}
 
-    const client = mqtt.connect(brokerUrl, options);
+/* ============================
+   MQTT connect & handlers
+   ============================ */
+function connectMQTT(){
+  if(client && connected) return;
+  log('Connecting to broker...');
+  const opts = {
+    username: MQTT_USER,
+    password: MQTT_PASS,
+    clientId: 'web-gen-' + Math.random().toString(16).slice(2,9),
+    protocol: 'wss',
+    keepalive: 60
+  };
+  client = mqtt.connect(BROKER, opts);
 
-    const statusEl = document.getElementById("status");
-    const voltageEl = document.getElementById("voltage");
-    const logEl = document.getElementById("log");
+  client.on('connect', () => {
+    setConn(true);
+    log('MQTT connected');
+    client.subscribe(TELEMETRY_TOPIC, {qos:0}, (err)=>{ if(!err) log('Subscribed to telemetry'); });
+    // request a status update from device (non-required, helpful)
+    publishCmd({ command: 'STATUS_REQUEST' });
+  });
 
-    function log(msg) {
-      const time = new Date().toLocaleTimeString();
-      logEl.innerHTML = `[${time}] ${msg}<br>` + logEl.innerHTML;
-    }
+  client.on('reconnect', ()=> log('Reconnecting...'));
+  client.on('error', (err)=> { log('MQTT error: ' + err.message); setConn(false); });
+  client.on('close', ()=> { log('MQTT closed'); setConn(false); });
 
-    client.on("connect", () => {
-      statusEl.textContent = "🟢 Connected to HiveMQ Cloud";
-      log("Connected ✅");
-
-      // Subscribe to voltage topic
-      client.subscribe("esp32/generator/voltage", (err) => {
-        if (!err) log("Subscribed to esp32/generator/voltage");
-      });
-    });
-
-    client.on("error", (err) => {
-      statusEl.textContent = "🔴 Connection Error: " + err.message;
-      log("Error ❌ " + err.message);
-    });
-
-    client.on("message", (topic, message) => {
-      if (topic === "esp32/generator/voltage") {
-        try {
-          const data = JSON.parse(message.toString());
-          voltageEl.textContent = `Voltage: ${data.voltage.toFixed(2)} V`;
-          log("Voltage update: " + data.voltage.toFixed(2) + " V");
-        } catch (e) {
-          log("Invalid message: " + message.toString());
-        }
+  client.on('message', (topic, payload) => {
+    try {
+      const text = payload.toString();
+      if (topic === TELEMETRY_TOPIC) {
+        const data = JSON.parse(text);
+        handleTelemetry(data);
+      } else {
+        log(`Msg ${topic}: ${payload.toString()}`);
       }
-    });
-
-    function sendCommand(cmd) {
-      client.publish("esp32/generator/control", cmd);
-      log("Sent command: " + cmd);
+    } catch(e){
+      log('Invalid telemetry JSON');
     }
-  </script>
+  });
+}
+function disconnectMQTT(){
+  if(client) client.end(true);
+  setConn(false);
+  log('Disconnected by user');
+}
+
+/* ============================
+   Publish helpers
+   ============================ */
+function publishCmd(obj){
+  if(!client || !connected) { log('Not connected — cannot send command'); return; }
+  const payload = JSON.stringify(obj);
+  client.publish(CMD_TOPIC, payload, {qos:0}, (err)=> {
+    if(err) log('Publish error: ' + err.message);
+    else log('Published → ' + CMD_TOPIC + ' : ' + payload);
+  });
+}
+function publishInputsState(){
+  // send a compact representation, e.g. { command: "SET_INPUTS", inputs: [1,0,1,1] }
+  const arr = inputsEnabled.map(b=> b?1:0);
+  publishCmd({ command: 'SET_INPUTS', inputs: arr });
+}
+function publishThresholds(){
+  const start = parseFloat(startThresholdInput.value);
+  const stop = parseFloat(stopThresholdInput.value);
+  publishCmd({ command: 'SET_THRESHOLDS', start: start, stop: stop });
+  log(`Thresholds sent start=${start} stop=${stop}`);
+}
+
+/* ============================
+   Telemetry handling & logic
+   ============================ */
+function handleTelemetry(data){
+  // Expect V1..V4 (case-insensitive) and optionally genState (0/1 or "ON"/"OFF")
+  const keys = ['V1','V2','V3','V4'];
+  for(let i=0;i<4;i++){
+    const k1 = keys[i];
+    let v = null;
+    if(data.hasOwnProperty(k1)) v = Number(data[k1]);
+    else if(data.hasOwnProperty(k1.toLowerCase())) v = Number(data[k1.toLowerCase()]);
+    lastVoltages[i] = isFinite(v) ? v : lastVoltages[i];
+  }
+
+  // genState sync (optional)
+  if(data.genState !== undefined || data.gen !== undefined){
+    const g = (data.genState ?? data.gen).toString();
+    if(g === '1' || g.toUpperCase() === 'ON' || g.toUpperCase() === 'TRUE') {
+      if(!genOn) { genOn = true; genStartEpoch = Date.now(); }
+    } else {
+      genOn = false;
+    }
+    updateGenUI();
+  }
+
+  renderInputValues();
+  updateChart();
+  computeAndAct();
+}
+
+/* Compute lowest enabled voltage and auto-act */
+function computeAndAct(){
+  // build list of enabled voltages
+  const values = [];
+  for(let i=0;i<4;i++){
+    if(inputsEnabled[i] && lastVoltages[i] != null && isFinite(lastVoltages[i])) values.push(lastVoltages[i]);
+  }
+  if(values.length === 0){
+    lowestValEl.textContent = '--.- V';
+    return;
+  }
+  const lowest = Math.min(...values);
+  lowestValEl.textContent = lowest.toFixed(2) + ' V';
+
+  // Auto control only if enabled and not manually overridden
+  const start = parseFloat(startThresholdInput.value);
+  const stop = parseFloat(stopThresholdInput.value);
+
+  // If autoControl ON and not manual override, apply:
+  if(autoControl && !manualOverride){
+    if(!genOn && lowest < start){
+      sendGenOn('auto:threshold');
+    } else if(genOn && (lowest > stop)){
+      sendGenOff('auto:threshold');
+    }
+  }
+}
+
+/* ============================
+   Chart updates
+   ============================ */
+function updateChart(){
+  const now = new Date().toLocaleTimeString();
+  chart.data.labels.push(now);
+  if(chart.data.labels.length > 60) chart.data.labels.shift();
+
+  for(let i=0;i<4;i++){
+    const v = (lastVoltages[i] != null ? lastVoltages[i] : NaN);
+    chart.data.datasets[i].data.push(isFinite(v) ? v : null);
+    if(chart.data.datasets[i].data.length > 60) chart.data.datasets[i].data.shift();
+  }
+  chart.update('none');
+}
+
+/* ============================
+   Generator control (dashboard-managed 4-hour timer)
+   ============================ */
+function sendGenOn(reason='manual'){
+  if(!client || !connected){ log('Cannot GEN_ON — not connected'); return; }
+  publishCmd({ command: 'GEN_ON', reason: reason });
+  genOn = true;
+  genStartEpoch = Date.now();
+  updateGenUI();
+  log('Sent GEN_ON (' + reason + ') — 4-hour timer started');
+}
+function sendGenOff(reason='manual'){
+  if(!client || !connected){ log('Cannot GEN_OFF — not connected'); return; }
+  publishCmd({ command: 'GEN_OFF', reason: reason });
+  genOn = false;
+  genStartEpoch = null;
+  updateGenUI();
+  countdownEl.textContent = '--:--:--';
+  log('Sent GEN_OFF (' + reason + ') — timer stopped');
+}
+
+/* Timer tick to update countdown and enforce 4h fail-safe */
+function timerTick(){
+  // countdown display
+  if(genOn && genStartEpoch){
+    const elapsed = Date.now() - genStartEpoch;
+    const remaining = Math.max(0, MAX_RUN_MS - elapsed);
+    const hrs = Math.floor(remaining / 3600000);
+    const mins = Math.floor((remaining % 3600000) / 60000);
+    const secs = Math.floor((remaining % 60000) / 1000);
+    countdownEl.textContent = `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+
+    if(remaining <= 0){
+      // timer expired — force gen off and send command
+      sendGenOff('auto:4h-failsafe');
+    }
+  }
+}
+
+/* ============================
+   UI events
+   ============================ */
+btnConnect.onclick = connectMQTT;
+btnDisconnect.onclick = disconnectMQTT;
+btnGenOn.onclick = ()=>{ manualOverride=true; sendGenOn('manual'); updateGenUI(); };
+btnGenOff.onclick = ()=>{ manualOverride=true; sendGenOff('manual'); updateGenUI(); };
+btnOverride.onclick = ()=>{
+  manualOverride = !manualOverride;
+  btnOverride.textContent = manualOverride ? 'Manual Override: ON' : 'Manual Override: OFF';
+  log('Manual override ' + (manualOverride?'enabled':'disabled'));
+};
+btnSendThresholds.onclick = publishThresholds;
+btnAutoToggle.onclick = ()=>{
+  autoControl = !autoControl;
+  btnAutoToggle.textContent = 'Auto: ' + (autoControl ? 'ON' : 'OFF');
+  log('Auto control ' + (autoControl?'enabled':'disabled'));
+};
+btnClearLog.onclick = ()=> logEl.innerHTML = '';
+btnResetTimer.onclick = ()=> { genStartEpoch = Date.now(); log('4-hour timer reset by user'); updateGenUI(); };
+
+/* ============================
+   Initialization
+   ============================ */
+renderInputCards();
+renderInputValues();
+updateGenUI();
+setConn(false);
+brokerInfoEl.textContent = BROKER;
+
+/* timer */
+setInterval(timerTick, 1000);
+
+/* auto reconnect if disconnected */
+setInterval(()=>{
+  if(!connected && client === null) connectMQTT();
+}, 2000);
+
+/* expose helper to send thresholds from inputs too on Enter */
+startThresholdInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter') publishThresholds(); });
+stopThresholdInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter') publishThresholds(); });
+
+/* initial connect */
+connectMQTT();
+
+</script>
 </body>
 </html>
